@@ -13,7 +13,7 @@
         <button id="submit_username" onclick="registerUser()">Submit</button>
     </div>
     <div class="userinfo">
-        <span id="user_message">You are currently not registered. Register to be able to see your drawings<br>Should be more than 5 characters</span>
+        <span id="user_message">You are currently not registered. Register to be able to see your drawings<br>Should be more than 2 characters</span>
     </div>
     <div>
         <div class="controlbar">
@@ -58,10 +58,27 @@
             <br>
         </div>
         <div class="controlbar">
+            <label for="pencil_color">Pencil color</label><br>
+            <input id="pencil_color" type="color"><br>
+        </div>
+        <div class="controlbar">
+            <label for="pencil_size">Pencil size</label><br>
+            <select id="pencil_size">
+                <option value="2">2px</option>
+                <option value="4">4px</option>
+                <option value="6">6px</option>
+                <option value="8">8px</option>
+                <option value="10">10px</option>
+                <option value="20">20px</option>
+            </select>
+            <br>
+        </div>
+        <div class="controlbar">
             <label for="draw">Figure size</label><br>
             <button onclick="draw()" disabled id="draw">Draw</button><br>
         </div>
     </div>
+
     <canvas id="canvas">
 
     </canvas>

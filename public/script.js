@@ -6,13 +6,16 @@ const c = canvas.getContext('2d')
 var socket = io();
 
 let username = ''
+let isDrawing = false;
+let x=0;
+let y=0;
 
 function registerUser(){
     c.clearRect(0, 0, canvas.width, canvas.height)
     let input = document.getElementById('username_field')
     let draw_btn = document.getElementById('draw')
     let user_message = document.getElementById('user_message')
-    if(input.value.length >= 6){
+    if(input.value.length >= 3){
         //Unlock draw button
         if(draw_btn.disabled == true){ draw_btn.disabled = false}
         username = input.value
@@ -24,6 +27,12 @@ function registerUser(){
         user_message.innerHTML = `You are no longer registered. Register to be able to see your drawings`
     }
 }
+
+function isUserRegistered(){
+    return username != ''
+}
+
+//EVENT
 
 addEventListener('load', () => {
     canvas.width = innerWidth
@@ -38,6 +47,38 @@ addEventListener('resize', () => {
     canvas.width = innerWidth
     canvas.height = innerHeight
 })
+
+canvas.addEventListener('mousedown', function(e) {
+    const rect = canvas.getBoundingClientRect()
+    x = e.clientX - rect.left
+    y = e.clientY - rect.top
+    console.log("x: " + x + " y: " + y)
+    isDrawing=true
+})
+
+canvas.addEventListener('mousemove', e => {
+    if (isDrawing === true) {
+      //drawCircleAtCursor(x,y,canvas, e)
+      drawLine(x, y, e.offsetX, e.offsetY);
+      sendLine({ x: x, y: y, x2: e.offsetX, y2: e.offsetY, pencil_color: document.getElementById('pencil_color').value, pencil_size: parseInt(document.getElementById('pencil_size').value)})
+      x = e.offsetX;
+      y = e.offsetY;
+      console.log("x: " + x + " y: " + y)
+      
+    }
+});
+
+window.addEventListener('mouseup', e => {
+    if (isDrawing === true) {
+      //drawCircleAtCursor(x,y,canvas, e)
+      drawLine(x, y, e.offsetX, e.offsetY);
+      x = 0;
+      y = 0;
+      isDrawing = false;
+    }
+});
+
+//FIGURE
 
 function draw(){
     let forme = document.getElementById('form').value
@@ -137,8 +178,45 @@ function getStartingPoint(figSize, borderSize){
     return [x,y]
 }
 
+//LINE
+
+function drawLine(x1, y1, x2, y2, pencil_color = document.getElementById('pencil_color').value, pencil_size = parseInt(document.getElementById('pencil_size').value)) {
+// using a line between actual point and the last one solves the problem
+// if you make very fast circles, you will see polygons.
+// we could make arcs instead of lines to smooth the angles and solve the problem
+  c.beginPath();
+  c.strokeStyle = pencil_color;
+  c.lineWidth = pencil_size;
+  c.moveTo(x1, y1);
+  c.lineTo(x2, y2);
+  c.stroke();
+  c.closePath();
+}
+
+function drawCircleAtCursor(x,y, pencil_color = document.getElementById('pencil_color').value, pencil_size = parseInt(document.getElementById('pencil_size').value)) {
+// Problem with draw circle is the refresh rate of the mousevent.
+// if you move too fast, circles are not connected.
+// this is browser dependant, and can't be modified.
+    c.beginPath()
+    c.arc(x, y, 10/2, 0, Math.PI * 2)
+    c.closePath()
+
+    c.lineWidth = pencil_size
+    c.strokeStyle = pencil_color
+    c.stroke()
+    
+    c.fillStyle = pencil_color
+    c.fill()
+}
+
+// NETWORK
+
 function sendData(data){
     socket.emit('send_figure', data)
+}
+
+function sendLine(data){
+    socket.emit('send_line', data)
 }
 
 socket.on('share_figure', (figure) => {
@@ -151,4 +229,8 @@ socket.on('share_figure', (figure) => {
     else if(figure.forme == 'circle'){
         drawCircle(figure.figSize, figure.borderSize, figure.start, figure.borderColor, figure.backgroundColor, false)
     }
+})
+
+socket.on('share_line', (line) => {
+    drawLine(line.x, line.y, line.x2, line.y2, line.pencil_color, line.pencil_size)
 })
