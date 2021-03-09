@@ -49,22 +49,31 @@ addEventListener('resize', () => {
 })
 
 canvas.addEventListener('mousedown', function(e) {
-    const rect = canvas.getBoundingClientRect()
-    x = e.clientX - rect.left
-    y = e.clientY - rect.top
-    console.log("x: " + x + " y: " + y)
-    isDrawing=true
+    if(username != ''){
+        const rect = canvas.getBoundingClientRect()
+        x = e.clientX - rect.left
+        y = e.clientY - rect.top
+        console.log("x: " + x + " y: " + y)
+        //Modify last drawer message
+        let last_drawer = document.getElementById('last_drawer')
+        last_drawer.innerHTML = `The last drawer is <b>YOU</b>`
+
+        isDrawing=true        
+    }
+    else{
+        let user_message = document.getElementById('user_message')
+        user_message.innerHTML = `<span style="color:red;">You must be registered to perform this action !</span>`
+    }
+
 })
 
 canvas.addEventListener('mousemove', e => {
     if (isDrawing === true) {
       //drawCircleAtCursor(x,y,canvas, e)
       drawLine(x, y, e.offsetX, e.offsetY);
-      sendLine({ x: x, y: y, x2: e.offsetX, y2: e.offsetY, pencil_color: document.getElementById('pencil_color').value, pencil_size: parseInt(document.getElementById('pencil_size').value)})
+      sendLine({user: username, x: x, y: y, x2: e.offsetX, y2: e.offsetY, pencil_color: document.getElementById('pencil_color').value, pencil_size: parseInt(document.getElementById('pencil_size').value)})
       x = e.offsetX;
       y = e.offsetY;
-      console.log("x: " + x + " y: " + y)
-      
     }
 });
 
@@ -232,5 +241,7 @@ socket.on('share_figure', (figure) => {
 })
 
 socket.on('share_line', (line) => {
+    let last_drawer = document.getElementById('last_drawer')
+    last_drawer.innerHTML = `The last drawer is <b>${line.user}</b>`
     drawLine(line.x, line.y, line.x2, line.y2, line.pencil_color, line.pencil_size)
 })
